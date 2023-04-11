@@ -18,7 +18,7 @@ labels_list = [i for i in os.listdir(train_dir)]
 pathimg = [os.listdir(train_dir + i) for i in labels_list]
 
 # Visualize HOG for letter A
-im_test = cv2.imread('ocr_data/train/1/1.jpg', 0)
+im_test = cv2.imread('ocr_data/train/1/0.jpg', 0)
 _, hog_img = hog(im_test, orientations=9, pixels_per_cell=(
     8, 8), cells_per_block=(1, 1), visualize=True)
 plt.imshow(hog_img, cmap='gray')
@@ -32,7 +32,7 @@ for i, j in enumerate(zip(pathimg, labels_list)):
     imgs, label = j
     for img in imgs:
         img = cv2.imread(train_dir+label+'/'+img)
-        img_res = cv2.resize(img, (28, 28), interpolation=cv2.INTER_AREA)
+        img_res = cv2.resize(img, (64, 128), interpolation=cv2.INTER_AREA)
         img_gray = cv2.cvtColor(img_res, cv2.COLOR_BGR2GRAY)
         hog_img = hog(img_gray, orientations=9,
                       pixels_per_cell=(8, 8), cells_per_block=(1, 1))
@@ -61,7 +61,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y,
                                                     random_state=42)
 
 # sm = SMOTE(random_state=0)
-oversample = SMOTE()
+oversample = SMOTE(random_state=0)
 sm_x, sm_y = oversample.fit_resample(x_train, y_train)
 
 bal_df = pd.DataFrame(sm_x)
@@ -80,7 +80,7 @@ print(classification_report(y_test, y_pred))
 joblib.dump(clf, r'ocr_data/models/hog_trained.pkl')
 
 clf = joblib.load('ocr_data/models/hog_trained.pkl')
-im = cv2.imread('ocr_data/licenseplates/tth.jpg')
+im = cv2.imread('ocr_data/licenseplates/th.jpg')
 
 im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
@@ -100,15 +100,15 @@ for num, i_bboxes in enumerate(sorted_bboxes):
         cv2.rectangle(im, (x, y), (x+w, y+h), (0, 255, 0), 1)
         roi = im_gray[y:y+h, x:x+w]
         # Resize the image
-        roi = cv2.resize(roi, (28, 28), interpolation=cv2.INTER_AREA)
+        roi = cv2.resize(roi, (64, 128), interpolation=cv2.INTER_AREA)
         # Calculate the HOG features
         # use the same parameters used for training
         roi_hog_fd = hog(roi, orientations=9, pixels_per_cell=(8, 8),
-                         cells_per_block=(1, 1))
+                         cells_per_block=(10, 10))
         nbr = clf.predict(np.array([roi_hog_fd]))
 
         cv2.putText(im, str((nbr[0])), (x, y+h), cv2.FONT_HERSHEY_SIMPLEX,
-                    2, (0, 20, 25), 3)
+                    2, (0, 200, 250), 3)
         plate_char.append(str(nbr[0]))
 
 print(''.join(plate_char))
